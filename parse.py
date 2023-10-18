@@ -110,12 +110,12 @@ if __name__ == '__main__':
     drivers = [webdriver.Chrome(options=chrome_options) for _ in range(n_workers)]
 
 
-    words = read_or_new_pickle(path / 'words.pkl')
+    words = read_or_new_pickle(path / 'remaining_words.pkl')
     for chunk_of_words in (pbar := tqdm(chunks(words, n_workers))):
         pbar.set_description(f"Current chunk: {chunk_of_words}")
 
         parallel_cases = Parallel(n_jobs=-1, prefer="threads")(delayed(get_cases_by_word)(*z) for z in zip(chunk_of_words, drivers))
-        
+
 
         cases = read_or_new_pickle(path / 'cases.pkl')
         with open(path / 'cases.pkl', 'wb') as f:
@@ -123,5 +123,5 @@ if __name__ == '__main__':
         del cases
 
         pop_elements(words, chunk_of_words)
-        with open(path / 'words.pkl', 'wb') as f:
+        with open(path / 'remaining_words.pkl', 'wb') as f:
             pickle.dump(words, f)
