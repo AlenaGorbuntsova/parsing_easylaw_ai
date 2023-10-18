@@ -17,7 +17,7 @@ chrome_options = Options()
 chrome_options.add_argument('--headless')
 chrome_options.add_argument('--no-sandbox')
 
-n_workers = 4
+n_workers = 6
 
 
 def chunks(xs, n):
@@ -39,8 +39,8 @@ def read_or_new_pickle(path):
 def pop_elements(full_list, elements):
     for element in elements:
         full_list.remove(element)
-        
 
+ 
 def get_cases_by_word(search_term, driver_):
     def get_content_of_case(driver_):
         table_len = pd.read_html(driver_.find_element(By.CSS_SELECTOR, f'table').get_attribute('outerHTML'))[0].shape[0]
@@ -79,8 +79,11 @@ def get_cases_by_word(search_term, driver_):
         for button in page_buttons:
             # go to clicked case tab:
             button.click()
-            driver_.switch_to.window(driver_.window_handles[-1])
-            
+            if len(driver_.window_handles) > 1:
+                driver_.switch_to.window(driver_.window_handles[-1])
+            else:
+                continue
+
             content = get_content_of_case(driver_)
             content['search_term'] = search_term
             word_cases.append(content)
