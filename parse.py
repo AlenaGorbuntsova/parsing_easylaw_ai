@@ -25,17 +25,17 @@ def chunks(xs, n):
     return [xs[i:i + n] for i in range(0, len(xs), n)]
 
 
-def read_or_new_pickle(path):
+def read_or_new_pickle(path, default_value = []):
     try:
         with open(path, "rb") as f:
             return pickle.load(f)
     except Exception:
         with open(path, "wb") as f:
-            pickle.dump([], f)
+            pickle.dump(default_value, f)
         print('New file has been created.')
         return []
-    
-    
+
+
 def pop_elements(full_list, elements):
     for element in elements:
         full_list.remove(element)
@@ -69,12 +69,12 @@ def get_cases_by_word(search_term, driver_):
     word_cases = []
 
     while 1:
-        print(driver_.find_element(By.CSS_SELECTOR, '.dataTables_info').text, end="\r")
+        # print(driver_.find_element(By.CSS_SELECTOR, '.dataTables_info').text, end="\r")
 
         page_buttons = driver_.find_elements(By.CSS_SELECTOR, 'button.btn-link')
 
         if not page_buttons:
-            print('Page is empty.')
+            break
 
         for button in page_buttons:
             # go to clicked case tab:
@@ -111,20 +111,17 @@ if __name__ == '__main__':
 
 
     words = read_or_new_pickle(path / 'words.pkl')
-    cases = read_or_new_pickle(path / 'cases.pkl')
-
     for chunk_of_words in (pbar := tqdm(chunks(words, n_workers))):
         pbar.set_description(f"Current chunk: {chunk_of_words}")
 
-        zipped = zip(chunk_of_words, drivers)
-        
-        parallel_cases = Parallel(n_jobs=-1, prefer="threads")(delayed(get_cases_by_word)(*z) for z in zipped)
+        parallel_cases = Parallel(n_jobs=-1, prefer="threads")(delayed(get_cases_by_word)(*z) for z in zip(chunk_of_words, drivers))
         
 
-        cases += list(itertools.chain(*parallel_cases))
+        cases = read_or_new_pickle(path / 'cases.pkl')
         with open(path / 'cases.pkl', 'wb') as f:
-            pickle.dump(cases, f)
-        
+            pickle.dump(cases + list(itertools.chain(*parallel_cases)), f)
+        del cases
+
         pop_elements(words, chunk_of_words)
         with open(path / 'words.pkl', 'wb') as f:
             pickle.dump(words, f)
