@@ -2,6 +2,7 @@ import pickle
 import itertools
 import pandas as pd
 from tqdm import tqdm
+from time import sleep
 from pathlib import Path
 from selenium import webdriver
 from joblib import Parallel, delayed
@@ -17,7 +18,7 @@ chrome_options = Options()
 chrome_options.add_argument('--headless')
 chrome_options.add_argument('--no-sandbox')
 
-n_workers = 6
+n_workers = int(input('number of workers: '))
 
 
 def chunks(xs, n):
@@ -125,3 +126,6 @@ if __name__ == '__main__':
         pop_elements(words, chunk_of_words)
         with open(path / 'remaining_words.pkl', 'wb') as f:
             pickle.dump(words, f)
+        
+        
+        sleep(30)
