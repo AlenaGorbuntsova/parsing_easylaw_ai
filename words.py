@@ -18,10 +18,11 @@ if __name__ == '__main__':
 
     words_table = driver.find_element(By.CSS_SELECTOR, f'#wordlist').get_attribute('outerHTML')
     words_table = pd.concat(pd.read_html(words_table))
+    
+    driver.close()
 
     words = list(words_table[1])
-
-    driver.close()
+    words = pd.Series(words).drop_duplicates().tolist()
 
     with open(path / 'all_words.pkl', 'wb') as f:
         pickle.dump(words, f)

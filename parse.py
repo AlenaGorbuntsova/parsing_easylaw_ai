@@ -127,4 +127,4 @@ if __name__ == '__main__':
             pickle.dump(words, f)
         
         
-        sleep(30)
+        sleep(60)
