@@ -1,3 +1,7 @@
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
+
 import pickle
 import itertools
 import pandas as pd
