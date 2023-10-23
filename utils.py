@@ -20,3 +20,17 @@ def read_or_new_pickle(path, default_value = []):
 def pop_elements(full_list, elements):
     for element in elements:
         full_list.remove(element)
+
+
+def append_to_pickle(path, value):
+    file = read_or_new_pickle(path)
+    if isinstance(value, list):
+        file += value
+    elif isinstance(value, dict):
+        file.update(value)
+    else:
+        file.append(value)
+
+    with open(path, 'wb') as f:
+        pickle.dump(file, f)
+    
