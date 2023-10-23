@@ -9,21 +9,26 @@ from joblib import Parallel, delayed
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException, WebDriverException
 
-from utils import chunks, read_or_new_pickle, pop_elements
+from utils import chunks, read_or_new_pickle, pop_elements, append_to_pickle
 
 
 path = Path('data')
 
 chrome_options = Options()
-chrome_options.add_argument('--headless')
+
 chrome_options.add_argument('--no-sandbox')
+
+if not int(input('(1-yes, 0-no) show process: ')):
+    chrome_options.add_argument('--headless')
 
 n_workers = int(input('number of workers: '))
 
- 
+
 def get_cases_by_word(search_term, driver_):
+    global path
+
     def get_content_of_case(driver_):
         table_len = pd.read_html(driver_.find_element(By.CSS_SELECTOR, f'table').get_attribute('outerHTML'))[0].shape[0]
 
@@ -65,8 +70,12 @@ def get_cases_by_word(search_term, driver_):
                     driver_.switch_to.window(driver_.window_handles[-1])
                 else:
                     continue
+                
+                try:
+                    content = get_content_of_case(driver_)
+                except NoSuchElementException:
+                    continue
 
-                content = get_content_of_case(driver_)
                 content['search_term'] = search_term
                 word_cases.append(content)
                 
@@ -84,10 +93,10 @@ def get_cases_by_word(search_term, driver_):
 
         return word_cases
     except TimeoutException:
-        print('TimeoutException has occurred. Sleeping for 10 minutes.')
-        sleep(10 * 60)
+        print(f'TimeoutException has occurred for "{search_term}". Skipping it.')
+        append_to_pickle(path / 'skipped.pkl', search_term)
         
-        return get_cases_by_word(search_term, driver_)
+        return []
 
 
 if __name__ == '__main__':
@@ -98,10 +107,13 @@ if __name__ == '__main__':
     for chunk_of_words in (pbar := tqdm(chunks(words, n_workers))):
         pbar.set_description(f"Current chunk: {chunk_of_words}")
         
-        drivers = [webdriver.Chrome(options=chrome_options) for _ in range(n_workers)]
+        try:
+            drivers = [webdriver.Chrome(options=chrome_options) for _ in range(n_workers)]
 
-        parallel_cases = Parallel(n_jobs=-1, prefer="threads")(delayed(get_cases_by_word)(*z) for z in zip(chunk_of_words, drivers))
-
+            parallel_cases = Parallel(n_jobs=-1, prefer="threads")(delayed(get_cases_by_word)(*z) for z in zip(chunk_of_words, drivers))
+        except WebDriverException:
+            sleep(5 * 60)
+            continue
 
         cases = read_or_new_pickle(path / 'cases.pkl')
         with open(path / 'cases.pkl', 'wb') as f:
