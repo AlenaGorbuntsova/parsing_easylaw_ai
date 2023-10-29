@@ -3,7 +3,6 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 import pickle
-import itertools
 import pandas as pd
 from tqdm import tqdm
 from time import sleep
@@ -119,9 +118,15 @@ if __name__ == '__main__':
             sleep(5 * 60)
             continue
 
-        cases = read_or_new_pickle(path / 'cases.pkl')
-        with open(path / 'cases.pkl', 'wb') as f:
-            pickle.dump(cases + list(itertools.chain(*parallel_cases)), f)
+
+        parallel_cases = pd.DataFrame(parallel_cases)
+
+        cases = pd.read_csv(path / 'cases.csv', sep='\t', encoding='utf-8')
+        cases = pd.concat([cases, parallel_cases], axis=0)
+
+        cases = cases.drop_duplicates('easylaw Case No.').reset_index(drop=True)
+
+        cases.to_csv(path / 'cases.csv', sep='\t', index=False, header=True, encoding='utf-8')
         del cases
 
         pop_elements(words, chunk_of_words)
