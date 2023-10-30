@@ -3,6 +3,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 import pickle
+import itertools
 import pandas as pd
 from tqdm import tqdm
 from time import sleep
@@ -119,7 +120,7 @@ if __name__ == '__main__':
             continue
 
 
-        cases = pd.DataFrame(cases)
+        cases = pd.DataFrame(list(itertools.chain(*cases)))
         
         cases_path = path / 'cases.csv'
         if cases_path.exists():
