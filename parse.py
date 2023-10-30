@@ -8,6 +8,7 @@ import pandas as pd
 from tqdm import tqdm
 from time import sleep
 from pathlib import Path
+from random import random
 from selenium import webdriver
 from joblib import Parallel, delayed
 from selenium.webdriver.common.by import By
@@ -68,13 +69,12 @@ def get_cases_by_word(search_term, driver_):
                 break
 
             for button in page_buttons:
-                # go to clicked case tab:
                 button.click()
-                if len(driver_.window_handles) > 1:
-                    driver_.switch_to.window(driver_.window_handles[-1])
-                else:
-                    continue
-                
+                sleep(max(random(), 0.2))
+
+            while len(driver_.window_handles) > 1:
+                driver_.switch_to.window(driver_.window_handles[-1])
+
                 try:
                     content = get_content_of_case(driver_)
                 except NoSuchElementException:
@@ -83,9 +83,9 @@ def get_cases_by_word(search_term, driver_):
                 content['search_term'] = search_term
                 word_cases.append(content)
                 
-                # close clicker case tab:
                 driver_.close()
-                driver_.switch_to.window(driver_.window_handles[0])
+
+            driver_.switch_to.window(driver_.window_handles[0])
 
             try:
                 driver_.find_element(By.CSS_SELECTOR, '.paginate_button.next.disabled')
