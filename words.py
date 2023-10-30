@@ -22,7 +22,7 @@ if __name__ == '__main__':
     driver.close()
 
     words = list(words_table[1])
-    words = pd.Series(words).drop_duplicates().tolist()
+    words = pd.Series(words).str.split(' ').str[0].drop_duplicates().tolist()
 
     with open(path / 'all_words.pkl', 'wb') as f:
         pickle.dump(words, f)
