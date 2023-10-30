@@ -3,6 +3,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 import pickle
+import itertools
 import pandas as pd
 from tqdm import tqdm
 from time import sleep
@@ -113,20 +114,23 @@ if __name__ == '__main__':
         try:
             drivers = [webdriver.Chrome(options=chrome_options) for _ in range(n_workers)]
 
-            parallel_cases = Parallel(n_jobs=-1, prefer="threads")(delayed(get_cases_by_word)(*z) for z in zip(chunk_of_words, drivers))
+            cases = Parallel(n_jobs=-1, prefer="threads")(delayed(get_cases_by_word)(*z) for z in zip(chunk_of_words, drivers))
         except WebDriverException:
             sleep(5 * 60)
             continue
 
 
-        parallel_cases = pd.DataFrame(parallel_cases)
-
-        cases = pd.read_csv(path / 'cases.csv', sep='\t', encoding='utf-8')
-        cases = pd.concat([cases, parallel_cases], axis=0)
+        cases = pd.DataFrame(list(itertools.chain(*cases)))
+        
+        cases_path = path / 'cases.csv'
+        if cases_path.exists():
+            all_cases = pd.read_csv(cases_path, sep='\t', encoding='utf-8')
+            cases = pd.concat([all_cases, cases], axis=0)
+            del all_cases
 
         cases = cases.drop_duplicates('easylaw Case No.').reset_index(drop=True)
 
-        cases.to_csv(path / 'cases.csv', sep='\t', index=False, header=True, encoding='utf-8')
+        cases.to_csv(cases_path, sep='\t', index=False, header=True, encoding='utf-8')
         del cases
 
         pop_elements(words, chunk_of_words)
