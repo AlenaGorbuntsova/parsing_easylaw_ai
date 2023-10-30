@@ -70,7 +70,7 @@ def get_cases_by_word(search_term, driver_):
 
             for button in page_buttons:
                 button.click()
-                sleep(max(random() / 2, 0.1))
+                sleep(max(random(), 0.2))
 
             while len(driver_.window_handles) > 1:
                 driver_.switch_to.window(driver_.window_handles[-1])
