@@ -1,1 +1,2 @@
-# https://www.easylaw.ai/
+# Parsing of judgement cases from easylaw.ai
+

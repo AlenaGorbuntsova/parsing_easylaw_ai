@@ -70,7 +70,7 @@ def get_cases_by_word(search_term, driver_):
 
             for button in page_buttons:
                 button.click()
-                sleep(max(random(), 0.2))
+                sleep(max(random(), 0.5))
 
             while len(driver_.window_handles) > 1:
                 driver_.switch_to.window(driver_.window_handles[-1])
@@ -115,6 +115,9 @@ if __name__ == '__main__':
             drivers = [webdriver.Chrome(options=chrome_options) for _ in range(n_workers)]
 
             cases = Parallel(n_jobs=-1, prefer="threads")(delayed(get_cases_by_word)(*z) for z in zip(chunk_of_words, drivers))
+
+            for driver in drivers:
+                driver.close()
         except WebDriverException:
             sleep(5 * 60)
             continue
@@ -138,4 +141,4 @@ if __name__ == '__main__':
             pickle.dump(words, f)
         
         
-        sleep(60)
+        sleep(30)
